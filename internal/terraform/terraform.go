@@ -62,11 +62,14 @@ func validatePath(path string) (string, error) {
 // This is the entry point for all terraform-related operations.
 func NewTerraformCmd() *ufcli.Command {
 	return &ufcli.Command{
-		Name:  "terraform",
-		Usage: "Terraform operations and shortcuts",
+		Name:    "terraform",
+		Aliases: []string{"tf"},
+		Usage:   "Terraform operations and shortcuts",
 		Subcommands: []*ufcli.Command{
 			// Basic Terraform Commands (Core Workflow)
 			NewTerraformInitCmd(),
+			NewTerraformInitDirCmd(),
+			NewTerraformNewCmd(),
 			NewTerraformFormatCmd(),
 			NewTerraformValidateCmd(),
 			NewTerraformPlanCmd(),

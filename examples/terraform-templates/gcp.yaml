@@ -1,0 +1,59 @@
+# GCP Provider Template Configuration
+# Place this file at ~/.cc/terraform-templates/gcp.yaml
+# or specify a custom path with --config flag
+
+provider:
+  region: ""
+  profile: ""
+  credentials: ""
+  tags: {}
+  extra:
+    project: "your-gcp-project-id"
+    region: "us-east4"
+    zone: "us-east4-c"
+
+variables:
+  - name: "environment"
+    description: "Environment name (qa, stg, prod)"
+    type: "string"
+    default: '"qa"'
+  
+  - name: "project_id"
+    description: "GCP project ID"
+    type: "string"
+  
+  - name: "region"
+    description: "GCP region"
+    type: "string"
+    default: '"us-central1"'
+
+outputs:
+  - name: "resource_id"
+    description: "ID of the created resource"
+    value: "google_resource.example.id"
+  
+  - name: "resource_name"
+    description: "Name of the created resource"
+    value: "google_resource.example.name"
+
+data:
+  - type: "google_project"
+    name: "current"
+    config:
+      project_id: "var.project_id"
+    comment: "Get current GCP project information"
+
+version:
+  - name: "terraform"
+    config:
+      required_version: ">= 1.5.7"
+      required_providers:
+        google:
+          source: "hashicorp/google"
+          version: "~> 5.0"
+
+tfvars:
+  environment: "qa"
+  project_id: "my-gcp-project"
+  region: "us-central1"
+

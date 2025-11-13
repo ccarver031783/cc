@@ -1,0 +1,68 @@
+# Azure Provider Template Configuration
+# Place this file at ~/.cc/terraform-templates/azure.yaml
+# or specify a custom path with --config flag
+
+provider:
+  region: "eastus"
+  profile: ""
+  credentials: ""
+  tags:
+    Environment: "dev"
+    ManagedBy: "terraform"
+  extra:
+    subscription_id: "your-subscription-id"
+    tenant_id: "your-tenant-id"
+
+variables:
+  - name: "environment"
+    description: "Environment name (dev, staging, prod)"
+    type: "string"
+    default: '"dev"'
+  
+  - name: "resource_group_name"
+    description: "Name of the Azure resource group"
+    type: "string"
+  
+  - name: "location"
+    description: "Azure region location"
+    type: "string"
+    default: '"eastus"'
+
+outputs:
+  - name: "resource_id"
+    description: "ID of the created resource"
+    value: "azurerm_resource.example.id"
+  
+  - name: "resource_name"
+    description: "Name of the created resource"
+    value: "azurerm_resource.example.name"
+
+data:
+  - type: "azurerm_client_config"
+    name: "current"
+    config: {}
+    comment: "Get current Azure client configuration"
+  
+  - type: "azurerm_resource_group"
+    name: "main"
+    config:
+      name: '"my-resource-group"'
+    comment: "Reference to existing resource group"
+
+version:
+  - name: "terraform"
+    config:
+      required_version: ">= 1.5.7"
+      required_providers:
+        azurerm:
+          source: "hashicorp/azurerm"
+          version: "~> 5.0"
+        aws:
+          source: "hashicorp/aws"
+          version: "~> 5.0"
+
+tfvars:
+  environment: "dev"
+  resource_group_name: "my-rg"
+  location: "eastus"
+
