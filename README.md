@@ -12,6 +12,7 @@ cc/
 ├── internal/
 │   ├── git/                 # Git operations
 │   ├── pr/                  # PR creation/management (GitHub CLI)
+│   ├── setup/               # Homebrew package management
 │   ├── terraform/           # Terraform operations
 │   └── shell/               # Shell execution utilities
 ├── go.mod
@@ -22,7 +23,24 @@ cc/
 
 ## Core Features
 
-### 1. Git Operations (`git` command)
+### 1. Setup (`setup` command)
+
+```bash
+cc setup                         # Check and manage Homebrew packages
+```
+
+The setup command:
+- **Checks Homebrew installation** - Installs Homebrew if not present
+- **Detects required packages** - Checks if packages are installed (via Homebrew or manually)
+- **Migrates manual installations** - For command-line tools, installs via Homebrew alongside manual versions and ensures Homebrew takes precedence via PATH
+- **Upgrades outdated packages** - Identifies and offers to upgrade packages with available updates
+- **Installs missing packages** - Offers to install packages not yet present
+
+**Migration behavior:**
+- **GUI Apps (Casks)**: Removes manual installation and reinstalls via Homebrew
+- **Command-Line Tools (Formulas)**: Installs via Homebrew alongside manual installation, allowing Homebrew to "assume control" via PATH precedence
+
+### 2. Git Operations (`git` command)
 
 ```bash
 cc git branch <name>         # Create new branch from clean main/master
