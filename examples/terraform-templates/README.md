@@ -5,6 +5,7 @@ This directory contains example template configuration files for customizing Ter
 ## Setup
 
 1. Copy the template files to your home directory:
+
    ```bash
    mkdir -p ~/.cc/terraform-templates
    cp aws.yaml ~/.cc/terraform-templates/
@@ -20,23 +21,33 @@ This directory contains example template configuration files for customizing Ter
 
 ## Usage
 
-### Using Default Location (~/.cc/terraform-templates/)
+### Using Default Location
+
+The default location for template files is `~/.cc/terraform-templates/`.
+
+**Scaffold a single provider directory:**
 
 ```bash
-# Scaffold with default templates
 cc tf init-dir ./my-terraform --provider aws
+```
 
-# Scaffold multi-provider resource
+**Scaffold a multi-provider resource:**
+
+```bash
 cc tf new my-resource --providers aws,azure
 ```
 
 ### Using Custom Config Path
 
-```bash
-# Single provider with custom config
-cc tf init-dir ./my-terraform --provider aws --config /path/to/aws.yaml
+**Single provider with custom config file:**
 
-# Multi-provider with custom config directory
+```bash
+cc tf init-dir ./my-terraform --provider aws --config /path/to/aws.yaml
+```
+
+**Multi-provider with custom config directory:**
+
+```bash
 cc tf new my-resource --providers aws,azure --config /path/to/templates/
 ```
 
@@ -44,37 +55,52 @@ cc tf new my-resource --providers aws,azure --config /path/to/templates/
 
 Each YAML file supports the following sections:
 
-### `provider`
-- `region`: Default AWS region / Azure location / GCP region
-- `profile`: AWS profile name (AWS only)
-- `credentials`: Path to credentials file
-- `tags`: Common tags to apply
-- `extra`: Provider-specific settings (subscription_id, tenant_id for Azure; project, zone for GCP)
+### Provider Configuration
 
-### `variables`
-List of variables to include in `input.tf`:
-- `name`: Variable name
-- `description`: Variable description
-- `type`: Terraform type (string, number, bool, map(string), etc.)
-- `default`: Default value (optional)
+The `provider` section configures the cloud provider block:
 
-### `outputs`
-List of outputs to include in `output.tf`:
-- `name`: Output name
-- `description`: Output description
-- `value`: Output value expression
+- **`region`**: Default AWS region / Azure location / GCP region
+- **`profile`**: AWS profile name (AWS only)
+- **`credentials`**: Path to credentials file
+- **`tags`**: Common tags to apply to resources
+- **`extra`**: Provider-specific settings
+  - Azure: `subscription_id`, `tenant_id`
+  - GCP: `project`, `zone`
 
-### `data`
-List of data sources to include in `data.tf`:
-- `type`: Data source type (e.g., `aws_vpc`, `azurerm_resource_group`)
-- `name`: Data source name
-- `config`: Key-value pairs for data source configuration
-- `comment`: Optional comment above the data source
+### Variables
 
-### `tfvars`
-Key-value pairs to include in `terraform.tfvars`
+The `variables` section defines variables to include in `input.tf`:
+
+- **`name`**: Variable name
+- **`description`**: Variable description
+- **`type`**: Terraform type (`string`, `number`, `bool`, `map(string)`, etc.)
+- **`default`**: Default value (optional)
+
+### Outputs
+
+The `outputs` section defines outputs to include in `output.tf`:
+
+- **`name`**: Output name
+- **`description`**: Output description
+- **`value`**: Output value expression
+
+### Data Sources
+
+The `data` section defines data sources to include in `data.tf`:
+
+- **`type`**: Data source type (e.g., `aws_vpc`, `azurerm_resource_group`)
+- **`name`**: Data source name
+- **`config`**: Key-value pairs for data source configuration
+- **`comment`**: Optional comment above the data source
+
+### Terraform Variables
+
+The `tfvars` section defines key-value pairs to include in `terraform.tfvars`.
 
 ## Examples
 
-See the example files (`aws.yaml`, `azure.yaml`, `gcp.yaml`) for complete examples.
+See the example files for complete examples:
 
+- [`aws.yaml`](aws.yaml) - AWS provider template
+- [`azure.yaml`](azure.yaml) - Azure provider template
+- [`gcp.yaml`](gcp.yaml) - GCP provider template
