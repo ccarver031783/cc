@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/christopher.carver/cc/internal/git"
-	"github.com/christopher.carver/cc/internal/pr"
+	"github.com/christopher.carver/cc/internal/terraform"
 	ufcli "github.com/urfave/cli/v2"
 )
 
@@ -18,7 +18,7 @@ func main() {
 		Usage: "Development and SRE-based CLI tooling - turning cc commands into shortcuts for git and terraform interaction ",
 		Commands: []*ufcli.Command{
 			git.NewGitCmd(),
-			pr.NewPRCmd(),
+			terraform.NewTerraformCmd(),
 		},
 	}
 
