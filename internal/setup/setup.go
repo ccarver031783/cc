@@ -5,8 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -26,17 +24,14 @@ const (
 
 // PackageInfo holds information about a Homebrew package
 type PackageInfo struct {
-	Name              string
-	DisplayName       string
-	Type              PackageType
-	Installed         bool
-	ManuallyInstalled bool
-	ManualPath        string
-	CurrentVersion    string
-	LatestVersion     string
-	NeedsUpgrade      bool
-	NeedsInstall      bool
-	NeedsMigration    bool
+	Name           string
+	DisplayName    string
+	Type           PackageType
+	Installed      bool
+	CurrentVersion string
+	LatestVersion  string
+	NeedsUpgrade   bool
+	NeedsInstall   bool
 }
 
 // RequiredPackages is the list of packages that should be checked
@@ -44,7 +39,7 @@ var RequiredPackages = []struct {
 	Name        string
 	DisplayName string
 }{
-	// {"cursor", "Cursor"}, // Not available via Homebrew
+	{"cursor", "Cursor"},
 	{"go", "GoLang"},
 	{"sequel-ace", "SequelAce"},
 	{"utm", "UTM"},
@@ -115,139 +110,6 @@ func checkPackageInstalled(ctx context.Context, packageName string, pkgType Pack
 	}
 
 	return strings.Contains(output, packageName), nil
-}
-
-// checkManualInstallation checks if a package is installed outside of Homebrew
-func checkManualInstallation(ctx context.Context, packageName string, pkgType PackageType) (bool, string) {
-	if pkgType == PackageTypeCask {
-		// For casks, check if the app exists in /Applications
-		// Common app names to check - convert package name to title case
-		appNames := []string{
-			packageName,
-		}
-
-		// Convert to title case manually (strings.Title is deprecated)
-		titleCase := strings.ToUpper(packageName[:1]) + strings.ToLower(packageName[1:])
-		appNames = append(appNames, titleCase)
-
-		// Handle hyphenated names like "sequel-ace" -> "Sequel Ace"
-		if strings.Contains(packageName, "-") {
-			parts := strings.Split(packageName, "-")
-			var titleParts []string
-			for _, part := range parts {
-				titleParts = append(titleParts, strings.ToUpper(part[:1])+strings.ToLower(part[1:]))
-			}
-			appNames = append(appNames, strings.Join(titleParts, " "))
-			appNames = append(appNames, strings.Join(titleParts, ""))
-		}
-
-		for _, appName := range appNames {
-			appPath := filepath.Join("/Applications", appName+".app")
-			if _, err := os.Stat(appPath); err == nil {
-				return true, appPath
-			}
-		}
-
-		// Also check for common variations
-		if packageName == "sequel-ace" {
-			if _, err := os.Stat("/Applications/Sequel Ace.app"); err == nil {
-				return true, "/Applications/Sequel Ace.app"
-			}
-		}
-	} else {
-		// For formulas, check if the binary exists in PATH
-		// For Go, check if 'go' command exists
-		if packageName == "go" {
-			if path, err := exec.LookPath("go"); err == nil {
-				// Check if it's not in Homebrew's typical paths
-				if !strings.Contains(path, "/opt/homebrew") && !strings.Contains(path, "/usr/local") {
-					return true, path
-				}
-				// Even if in homebrew paths, verify it's actually managed by homebrew
-				installed, _ := checkPackageInstalled(ctx, packageName, pkgType)
-				if !installed {
-					return true, path
-				}
-			}
-		} else {
-			// For other formulas, check if binary exists
-			if path, err := exec.LookPath(packageName); err == nil {
-				// Check if it's not in Homebrew's typical paths
-				if !strings.Contains(path, "/opt/homebrew") && !strings.Contains(path, "/usr/local") {
-					return true, path
-				}
-				// Verify it's actually managed by homebrew
-				installed, _ := checkPackageInstalled(ctx, packageName, pkgType)
-				if !installed {
-					return true, path
-				}
-			}
-		}
-	}
-
-	return false, ""
-}
-
-// removeManualInstallation attempts to remove a manually installed package
-func removeManualInstallation(ctx context.Context, packageName string, pkgType PackageType, manualPath string) error {
-	if pkgType == PackageTypeCask {
-		// For GUI apps, remove the .app bundle
-		fmt.Printf("  Removing manually installed app: %s\n", manualPath)
-		if err := os.RemoveAll(manualPath); err != nil {
-			return fmt.Errorf("failed to remove %s: %w", manualPath, err)
-		}
-		// Also try to remove from Applications folder if it's a symlink or alias
-		return nil
-	} else {
-		// For command-line tools, we can't automatically remove them safely
-		// as they might be installed system-wide or via other package managers
-		fmt.Printf("  Warning: Manual installation detected at %s\n", manualPath)
-		fmt.Printf("  Homebrew will install alongside the manual version and take precedence via PATH\n")
-		return fmt.Errorf("manual removal required for %s", packageName)
-	}
-}
-
-// installPackageAlongside installs a package via Homebrew even if a manual installation exists
-// This allows Homebrew to "assume control" by ensuring its version takes precedence in PATH
-func installPackageAlongside(ctx context.Context, packageName string, pkgType PackageType, manualPath string) error {
-	fmt.Printf("  Installing %s via Homebrew (manual installation at %s will remain)\n", packageName, manualPath)
-
-	// Install via Homebrew
-	if err := installPackage(ctx, packageName, pkgType); err != nil {
-		return err
-	}
-
-	// Verify Homebrew's installation takes precedence
-	if pkgType == PackageTypeFormula {
-		homebrewPaths := []string{"/opt/homebrew/bin", "/usr/local/bin"}
-		fmt.Printf("\n  ✓ %s installed via Homebrew\n", packageName)
-		fmt.Printf("  Ensure Homebrew's bin directory comes first in your PATH:\n")
-		for _, path := range homebrewPaths {
-			fmt.Printf("    export PATH=\"%s:$PATH\"\n", path)
-		}
-		fmt.Printf("\n  Add this to your shell profile (~/.zshrc or ~/.bash_profile) if needed\n")
-
-		// Try to detect which binary will be used
-		output, err := shell.Run(ctx, "which", packageName)
-		if err == nil {
-			output = strings.TrimSpace(output)
-			isHomebrew := false
-			for _, path := range homebrewPaths {
-				if strings.HasPrefix(output, path) {
-					isHomebrew = true
-					break
-				}
-			}
-			if isHomebrew {
-				fmt.Printf("  ✓ Homebrew version is now active: %s\n", output)
-			} else {
-				fmt.Printf("  ⚠ Manual version still active: %s\n", output)
-				fmt.Printf("    You may need to restart your terminal or update your PATH\n")
-			}
-		}
-	}
-
-	return nil
 }
 
 // getPackageVersion extracts the installed version from brew info output
@@ -351,42 +213,17 @@ func upgradePackage(ctx context.Context, packageName string, pkgType PackageType
 	return nil
 }
 
-// installPackage installs a package with progress indication
-func installPackage(ctx context.Context, packageName string, pkgType PackageType) error {
-	var args []string
-	if pkgType == PackageTypeCask {
-		args = []string{"install", "--cask", packageName}
-	} else {
-		args = []string{"install", packageName}
-	}
-
-	fmt.Printf("  [%s] Starting installation...\n", packageName)
-
-	// Run install with output streaming for progress
-	// This will show Homebrew's native progress output
-	err := shell.RunInteractive(ctx, "brew", args...)
-	if err != nil {
-		return fmt.Errorf("failed to install %s: %w", packageName, err)
-	}
-
-	fmt.Printf("  [%s] ✓ Installation completed\n", packageName)
-	return nil
-}
-
 // printSummaryTable prints a formatted table of package statuses
 func printSummaryTable(packages []PackageInfo) {
-	fmt.Println("\n" + strings.Repeat("=", 90))
-	fmt.Printf("%-20s %-15s %-15s %-25s %-15s\n", "Package", "Current", "Latest", "Status", "Action")
-	fmt.Println(strings.Repeat("-", 90))
+	fmt.Println("\n" + strings.Repeat("=", 80))
+	fmt.Printf("%-20s %-15s %-15s %-20s %-10s\n", "Package", "Current", "Latest", "Status", "Action")
+	fmt.Println(strings.Repeat("-", 80))
 
 	for _, pkg := range packages {
 		status := "Not Installed"
 		action := "Install"
 
-		if pkg.ManuallyInstalled {
-			status = "Manual Install"
-			action = "Migrate"
-		} else if pkg.Installed {
+		if pkg.Installed {
 			if pkg.NeedsUpgrade {
 				status = "Update Available"
 				action = "Upgrade"
@@ -406,10 +243,10 @@ func printSummaryTable(packages []PackageInfo) {
 			latestVer = "-"
 		}
 
-		fmt.Printf("%-20s %-15s %-15s %-25s %-15s\n",
+		fmt.Printf("%-20s %-15s %-15s %-20s %-10s\n",
 			pkg.DisplayName, currentVer, latestVer, status, action)
 	}
-	fmt.Println(strings.Repeat("=", 90) + "\n")
+	fmt.Println(strings.Repeat("=", 80) + "\n")
 }
 
 // promptConfirmation asks the user for confirmation
@@ -480,22 +317,12 @@ func NewSetupCmd() *ufcli.Command {
 				}
 				pkgInfo.Type = pkgType
 
-				// Check if installed via Homebrew
+				// Check if installed
 				installed, err := checkPackageInstalled(ctx, reqPkg.Name, pkgType)
 				if err != nil {
 					fmt.Printf("⚠ Warning: Error checking installation for %s: %v\n", reqPkg.DisplayName, err)
 				}
 				pkgInfo.Installed = installed
-
-				// Check if manually installed (outside Homebrew)
-				if !installed {
-					manuallyInstalled, manualPath := checkManualInstallation(ctx, reqPkg.Name, pkgType)
-					if manuallyInstalled {
-						pkgInfo.ManuallyInstalled = true
-						pkgInfo.ManualPath = manualPath
-						pkgInfo.NeedsMigration = true
-					}
-				}
 
 				if installed {
 					// Get current version
@@ -564,72 +391,10 @@ func NewSetupCmd() *ufcli.Command {
 				fmt.Println("All installed packages are up to date!")
 			}
 
-			// Check for packages that need migration (manually installed)
-			var packagesToMigrate []PackageInfo
-			for _, pkg := range packageInfos {
-				if pkg.NeedsMigration {
-					packagesToMigrate = append(packagesToMigrate, pkg)
-				}
-			}
-
-			if len(packagesToMigrate) > 0 {
-				fmt.Printf("\nFound %d package(s) installed outside of Homebrew:\n", len(packagesToMigrate))
-				for _, pkg := range packagesToMigrate {
-					fmt.Printf("  - %s (found at: %s)\n", pkg.DisplayName, pkg.ManualPath)
-				}
-				fmt.Println()
-				fmt.Println("These packages can be migrated to Homebrew management for easier updates.")
-				fmt.Println()
-
-				confirm, err := promptConfirmation("Would you like to migrate these packages to Homebrew?")
-				if err != nil {
-					return fmt.Errorf("error reading input: %w", err)
-				}
-
-				if confirm {
-					fmt.Println("\nMigrating packages to Homebrew...")
-					for _, pkg := range packagesToMigrate {
-						fmt.Printf("\n[%s] Starting migration...\n", pkg.DisplayName)
-
-						// Handle migration based on package type
-						if pkg.Type == PackageTypeFormula {
-							// For command-line tools, install alongside and let Homebrew take precedence
-							fmt.Printf("  Installing via Homebrew alongside manual installation\n")
-							if err := installPackageAlongside(ctx, pkg.Name, pkg.Type, pkg.ManualPath); err != nil {
-								fmt.Printf("✗ Error installing %s via Homebrew: %v\n", pkg.DisplayName, err)
-								fmt.Printf("  You may need to manually reinstall %s\n", pkg.DisplayName)
-							} else {
-								fmt.Printf("  ✓ %s now managed by Homebrew\n", pkg.DisplayName)
-							}
-						} else {
-							// For GUI apps (casks), remove the manual installation first
-							if err := removeManualInstallation(ctx, pkg.Name, pkg.Type, pkg.ManualPath); err != nil {
-								fmt.Printf("✗ Error removing manual installation: %v\n", err)
-								continue
-							}
-
-							// Small delay
-							time.Sleep(500 * time.Millisecond)
-
-							// Install via Homebrew
-							if err := installPackage(ctx, pkg.Name, pkg.Type); err != nil {
-								fmt.Printf("✗ Error installing %s via Homebrew: %v\n", pkg.DisplayName, err)
-								fmt.Printf("  You may need to manually reinstall %s\n", pkg.DisplayName)
-							} else {
-								fmt.Printf("  ✓ %s successfully migrated to Homebrew\n", pkg.DisplayName)
-							}
-						}
-					}
-					fmt.Println("\n✓ Package migrations completed")
-				} else {
-					fmt.Println("Migration cancelled")
-				}
-			}
-
 			// Check for packages that need installation
 			var packagesToInstall []PackageInfo
 			for _, pkg := range packageInfos {
-				if pkg.NeedsInstall && !pkg.NeedsMigration {
+				if pkg.NeedsInstall {
 					packagesToInstall = append(packagesToInstall, pkg)
 				}
 			}
@@ -639,32 +404,12 @@ func NewSetupCmd() *ufcli.Command {
 				for _, pkg := range packagesToInstall {
 					fmt.Printf("  - %s\n", pkg.DisplayName)
 				}
-				fmt.Println()
-
-				confirm, err := promptConfirmation("Would you like to install these packages?")
-				if err != nil {
-					return fmt.Errorf("error reading input: %w", err)
-				}
-
-				if confirm {
-					fmt.Println("\nInstalling packages...")
-					for _, pkg := range packagesToInstall {
-						if err := installPackage(ctx, pkg.Name, pkg.Type); err != nil {
-							fmt.Printf("✗ Error installing %s: %v\n", pkg.DisplayName, err)
-						}
-						// Small delay to make progress visible
-						time.Sleep(500 * time.Millisecond)
-					}
-					fmt.Println("\n✓ Package installations completed")
-				} else {
-					fmt.Println("Installation cancelled")
-					fmt.Println("\nTo install these packages manually, run:")
-					for _, pkg := range packagesToInstall {
-						if pkg.Type == PackageTypeCask {
-							fmt.Printf("  brew install --cask %s\n", pkg.Name)
-						} else {
-							fmt.Printf("  brew install %s\n", pkg.Name)
-						}
+				fmt.Println("\nTo install these packages, run:")
+				for _, pkg := range packagesToInstall {
+					if pkg.Type == PackageTypeCask {
+						fmt.Printf("  brew install --cask %s\n", pkg.Name)
+					} else {
+						fmt.Printf("  brew install %s\n", pkg.Name)
 					}
 				}
 			}

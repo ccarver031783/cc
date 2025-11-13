@@ -7,7 +7,7 @@ provider:
   profile: ""
   credentials: ""
   tags:
-    Environment: "dev"
+    Environment: "qa"
     ManagedBy: "terraform"
   extra:
     subscription_id: "your-subscription-id"
@@ -15,9 +15,9 @@ provider:
 
 variables:
   - name: "environment"
-    description: "Environment name (dev, staging, prod)"
+    description: "Environment name (qa, stg, prod)"
     type: "string"
-    default: '"dev"'
+    default: '"qa"'
   
   - name: "resource_group_name"
     description: "Name of the Azure resource group"
@@ -62,7 +62,7 @@ version:
           version: "~> 5.0"
 
 tfvars:
-  environment: "dev"
+  environment: "qa"
   resource_group_name: "my-rg"
   location: "eastus"
 

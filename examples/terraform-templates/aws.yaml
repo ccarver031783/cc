@@ -7,15 +7,15 @@ provider:
   profile: "default"
   credentials: "~/.aws/credentials"
   tags:
-    Environment: "dev"
+    Environment: "qa"
     ManagedBy: "terraform"
   extra: {}
 
 variables:
   - name: "environment"
-    description: "Environment name (dev, staging, prod)"
+    description: "Environment name (qa, stg, prod)"
     type: "string"
-    default: '"dev"'
+    default: '"qa"'
   
   - name: "project_name"
     description: "Name of the project"
@@ -24,7 +24,7 @@ variables:
   - name: "tags"
     description: "Common tags to apply to all resources"
     type: "map(string)"
-    default: "{"Environment": "dev", "ManagedBy": "terraform"}"
+    default: "{"Environment": "qa", "ManagedBy": "terraform"}"
 
 outputs:
   - name: "account_id"
@@ -61,6 +61,6 @@ version:
           version: "~> 5.0"
 
 tfvars:
-  environment: "dev"
+  environment: "qa"
   project_name: "my-project"
 
