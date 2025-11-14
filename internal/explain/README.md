@@ -114,3 +114,4 @@ ollama pull llama3.2
 - Ollama is great for quick, offline analysis
 - Add `ANTHROPIC_API_KEY` to your shell profile for persistence
 
+

@@ -99,3 +99,4 @@ func isOllamaRunning(ctx context.Context) bool {
 	return resp.StatusCode == http.StatusOK
 }
 
+
