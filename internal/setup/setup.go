@@ -1,3 +1,28 @@
+// Package setup - DEPRECATED (December 2024)
+//
+// This package is maintained for historical reference only and is no longer
+// used in the cc CLI.
+//
+// BACKGROUND:
+// Originally, cc used Homebrew to manage development dependencies (Go, Terraform,
+// tflint, tfsec, gh, etc.) via the `cc setup` command. This approach required
+// users to manually run `cc setup` and relied on Homebrew being installed.
+//
+// CHANGE:
+// Based on feedback to use mise (https://mise.jdx.dev/) for dependency management,
+// the setup command was replaced with a `.mise.toml` configuration file.
+// Users now run `mise install` to install all dependencies, which provides:
+//   - Consistent tool versions across environments
+//   - Project-level isolation (tools are scoped to the cc directory)
+//   - Simpler onboarding (one command: `mise install`)
+//   - Better alignment with dev/prod environment management practices
+//
+// The `cc setup` command was removed from main.go and this package is no longer
+// imported. It remains here for reference if similar functionality is needed
+// in the future or to understand the previous implementation.
+//
+// See: .mise.toml for the current dependency management approach.
+
 package setup
 
 import (

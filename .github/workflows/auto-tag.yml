@@ -1,0 +1,122 @@
+# Auto-Tag Workflow
+#
+# This workflow automatically creates version tags when code is pushed to main.
+#
+# Versioning Strategy:
+# - Major/Minor versions are controlled by the Version constant in main.go
+# - Patch versions are auto-incremented on each push to main
+#
+# Example:
+#   main.go has Version = "1.0.0"
+#   Push 1 → v1.0.0
+#   Push 2 → v1.0.1
+#   Push 3 → v1.0.2
+#   
+#   Developer updates to Version = "1.1.0"
+#   Push 4 → v1.1.0
+#   Push 5 → v1.1.1
+
+name: Auto Tag
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  auto-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for tags
+      
+      - name: Extract version from main.go
+        id: extract_version
+        run: |
+          # Extract the Version constant from main.go
+          BASE_VERSION=$(grep -E 'Version\s*=\s*"[0-9]+\.[0-9]+\.[0-9]+"' cmd/cc/main.go | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+          
+          if [ -z "$BASE_VERSION" ]; then
+            echo "Error: Could not extract version from main.go"
+            exit 1
+          fi
+          
+          echo "Base version from main.go: $BASE_VERSION"
+          echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
+          
+          # Extract major.minor for matching
+          MAJOR_MINOR=$(echo $BASE_VERSION | grep -oE '^[0-9]+\.[0-9]+')
+          echo "major_minor=$MAJOR_MINOR" >> $GITHUB_OUTPUT
+      
+      - name: Determine next version
+        id: next_version
+        run: |
+          BASE_VERSION="${{ steps.extract_version.outputs.base_version }}"
+          MAJOR_MINOR="${{ steps.extract_version.outputs.major_minor }}"
+          
+          # Get all tags matching this major.minor version
+          EXISTING_TAGS=$(git tag -l "v${MAJOR_MINOR}.*" | sort -V)
+          
+          if [ -z "$EXISTING_TAGS" ]; then
+            # No existing tags for this major.minor, use base version
+            NEXT_VERSION="$BASE_VERSION"
+            echo "No existing tags for v${MAJOR_MINOR}.x, using base version"
+          else
+            # Get the latest tag and increment patch
+            LATEST_TAG=$(echo "$EXISTING_TAGS" | tail -1)
+            LATEST_VERSION=${LATEST_TAG#v}  # Remove 'v' prefix
+            
+            echo "Latest existing tag: $LATEST_TAG"
+            
+            # Check if the base version from main.go is newer than latest tag
+            if [ "$(printf '%s\n' "$BASE_VERSION" "$LATEST_VERSION" | sort -V | tail -1)" = "$BASE_VERSION" ] && [ "$BASE_VERSION" != "$LATEST_VERSION" ]; then
+              # Base version is newer, use it directly
+              NEXT_VERSION="$BASE_VERSION"
+              echo "main.go version is newer, using: $NEXT_VERSION"
+            else
+              # Increment patch version
+              PATCH=$(echo $LATEST_VERSION | cut -d. -f3)
+              NEW_PATCH=$((PATCH + 1))
+              NEXT_VERSION="${MAJOR_MINOR}.${NEW_PATCH}"
+              echo "Incrementing patch: $NEXT_VERSION"
+            fi
+          fi
+          
+          echo "Next version: $NEXT_VERSION"
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          NEXT_VERSION="${{ steps.next_version.outputs.next_version }}"
+          if git rev-parse "v$NEXT_VERSION" >/dev/null 2>&1; then
+            echo "Tag v$NEXT_VERSION already exists"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Tag v$NEXT_VERSION does not exist"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create and push tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          NEXT_VERSION="${{ steps.next_version.outputs.next_version }}"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git tag -a "v$NEXT_VERSION" -m "Release v$NEXT_VERSION (auto-tagged)"
+          git push origin "v$NEXT_VERSION"
+          
+          echo "✅ Created and pushed tag: v$NEXT_VERSION"
+      
+      - name: Skip tag creation
+        if: steps.check_tag.outputs.exists == 'true'
+        run: |
+          echo "⏭️ Skipping - tag already exists for this version"
+

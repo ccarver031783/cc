@@ -1,0 +1,40 @@
+# cc CLI Tool - Mise Configuration
+# Run `mise install` to install all dependencies
+# Run `mise run <task>` to execute tasks
+
+[tools]
+go = "latest"
+terraform = "1.5.7"
+tflint = "latest"
+tfsec = "latest"
+gh = "latest"
+ollama = "latest"
+golangci-lint = "latest"
+
+# [env]
+# Environment variables are inherited from your shell.
+# Set ANTHROPIC_API_KEY in your shell profile for Claude API access:
+#   export ANTHROPIC_API_KEY=your_key_here
+
+[tasks]
+# Build the cc binary
+build = "go build -o cc ./cmd/cc"
+
+# Run all tests
+test = "go test ./..."
+
+# Install cc to GOBIN
+install = "go install ./cmd/cc"
+
+# Format Go code
+fmt = "go fmt ./..."
+
+# Lint code
+lint = "golangci-lint run"
+
+# Run without building
+run = "go run ./cmd/cc"
+
+# Remove built binary
+clean = "rm -f cc"
+

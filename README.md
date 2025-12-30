@@ -6,6 +6,9 @@ A simple, shortcut-based CLI tool for simplifying and automating common developm
 
 ```
 cc/
+├── .github/
+│   └── workflows/
+│       └── auto-tag.yml         # Auto-tagging on push to main
 ├── cmd/
 │   └── cc/
 │       └── main.go              # Entry point
@@ -13,8 +16,6 @@ cc/
 │   ├── git/                     # Git operations
 │   │   └── git.go              # Branch, rebase, clean, status
 │   ├── pr/                      # PR creation/management (GitHub CLI)
-│   ├── setup/                   # Homebrew package management
-│   │   └── setup.go            # Check, install, upgrade packages
 │   ├── terraform/               # Terraform operations
 │   │   └── terraform.go        # Format, scan, validate
 │   ├── explain/                 # AI-powered code explanations
@@ -30,37 +31,78 @@ cc/
 │       ├── azure.yaml
 │       ├── gcp.yaml
 │       └── README.md
+├── .mise.toml                   # Mise tool configuration
+├── CHANGELOG.md                 # Version history and changes
 ├── go.mod
 ├── go.sum
 ├── README.md
 └── .gitignore
 ```
 
-## Core Features
+## Prerequisites & Installation
 
-### 1. Setup & Package Management (`setup` command)
+### Install Mise (Tool Version Manager)
+
+cc uses [mise](https://mise.jdx.dev/) to manage all development dependencies.
 
 ```bash
-cc setup                         # Check and manage Homebrew packages
+# Install mise (if not already installed)
+curl https://mise.run | sh
+
+# Add mise to your shell (add to ~/.zshrc or ~/.bashrc)
+eval "$(mise activate zsh)"  # or bash
 ```
 
-The setup command:
-- **Checks Homebrew installation** - Installs Homebrew if not present
-- **Detects required packages** - Checks if packages are installed (via Homebrew or manually)
-- **Migrates manual installations** - For command-line tools, installs via Homebrew alongside manual versions and ensures Homebrew takes precedence via PATH
-- **Upgrades outdated packages** - Identifies and offers to upgrade packages with available updates
-- **Installs missing packages** - Offers to install packages not yet present
+### Install Dependencies
 
-**Migration behavior:**
-- **GUI Apps (Casks)**: Removes manual installation and reinstalls via Homebrew
-- **Command-Line Tools (Formulas)**: Installs via Homebrew alongside manual installation, allowing Homebrew to "assume control" via PATH precedence
+```bash
+# Clone the repository
+git clone <your-repo>
+cd cc
 
-**Required packages checked:**
-- Go (`go`)
-- Sequel Ace (`sequel-ace`)
-- UTM (`utm`)
+# Install all dependencies via mise
+mise install
+```
 
-### 2. Git Operations (`git` command)
+This installs:
+- **go** - Go compiler (latest)
+- **terraform** - Terraform CLI (pinned to 1.5.7)
+- **tflint** - Terraform linter
+- **tfsec** - Terraform security scanner
+- **gh** - GitHub CLI
+- **ollama** - Local AI for explanations
+- **golangci-lint** - Go linter
+
+### Build the CLI
+
+```bash
+# Using mise task
+mise run build
+
+# Or directly
+go build -o cc ./cmd/cc
+
+# Verify it works
+./cc --help
+```
+
+## Mise Tasks
+
+The project includes mise tasks for common operations:
+
+```bash
+mise run build    # Build the cc binary
+mise run test     # Run all tests
+mise run install  # Install cc to GOBIN
+mise run fmt      # Format Go code
+mise run lint     # Lint code with golangci-lint
+mise run run      # Run without building
+mise run clean    # Remove built binary
+```
+
+## Core Features
+
+### 1. Git Operations (`git` command)
 
 ```bash
 cc git branch <name>         # Create new branch from clean main/master
@@ -69,7 +111,7 @@ cc git clean                  # Clean working directory (stash changes, reset)
 cc git status                 # Enhanced git status with branch info
 ```
 
-### 3. PR Management (`pr` command)
+### 2. PR Management (`pr` command)
 
 ```bash
 cc pr create [--draft]        # Create PR from current branch using GitHub CLI
@@ -77,9 +119,9 @@ cc pr list                    # List open PRs (via gh CLI)
 cc pr view <number>           # View PR details (via gh CLI)
 ```
 
-**Note:** Commands must work whether user or AI/automation creates the PR.
+**Note:** These commands should work whether these are user or AI/automated PR creation.
 
-### 4. Terraform Operations (`terraform` or `tf` command)
+### 3. Terraform Operations (`terraform` or `tf` command)
 
 ```bash
 cc tf fmt                     # Format Terraform files (changed files only)
@@ -90,14 +132,14 @@ cc tf init-dir <path>         # Scaffold a new Terraform directory
 cc tf new <resource-name>     # Create multi-provider resource structure
 ```
 
-### 5. AI-Powered Explanations (`explain` command)
+### 4. AI-Powered Explanations (`explain` command)
 
 ```bash
 cc explain tf [path]          # Explain Terraform modules using AI
 cc explain tf . --local       # Use local Ollama instead of Claude API
 ```
 
-The explain command analyzes Terraform modules and provides clear explanations including:
+The explain command analyzes Terraform modules and provides clear explanations, including:
 - Purpose and functionality
 - Resources created
 - Key variables and outputs
@@ -109,7 +151,7 @@ The explain command analyzes Terraform modules and provides clear explanations i
 
 See [internal/explain/README.md](internal/explain/README.md) for setup details.
 
-### 6. Pre-Push Hook
+### 5. Pre-Push Hook
 
 ```bash
 cc hook install                # Install git pre-push hook
@@ -117,10 +159,11 @@ cc hook install                # Install git pre-push hook
 
 Hook automatically runs: `terraform fmt`, `scan` (tfsec/tflint), `validate` on changed files before allowing push.
 
-Hook must work in both manual and automated (AI/CI) contexts.
+This Hook should work in both manual and automated (AI/CI) contexts.
 
 ## Technology Stack
 
+- **Tool Management:** [mise](https://mise.jdx.dev/) - Polyglot runtime manager
 - **CLI Framework:** `github.com/urfave/cli/v2` - Command-line interface structure
 - **AI Integration:**
   - `github.com/anthropics/anthropic-sdk-go` - Claude API client
@@ -128,50 +171,25 @@ Hook must work in both manual and automated (AI/CI) contexts.
 - **Git Operations:** Shell commands via `os/exec`
 - **GitHub API:** `github.com/cli/cli` (gh CLI) wrapper
 - **Terraform:** Shell execution of terraform/tfsec/tflint binaries
-- **Package Management:** Homebrew via shell commands
-
-## Installation
-
-### Prerequisites
-
-- macOS (primary support) or Linux
-- Go 1.21+ (for building from source)
-- Homebrew (will be installed automatically if missing)
-
-### Building from Source
-
-```bash
-git clone <your-repo>
-cd cc
-go build -o cc ./cmd/cc
-./cc --help
-```
-
-### Optional Dependencies
-
-**For AI explanations:**
-- Claude API key (set `ANTHROPIC_API_KEY`)
-- OR Ollama installed locally (`brew install ollama`)
-
-**For Terraform operations:**
-- `terraform` - Terraform CLI
-- `tflint` or `tfsec` - Security scanning
 
 ## Quick Start
 
 ```bash
-# Set up your environment
-cc setup
+# Install dependencies
+mise install
+
+# Build the CLI
+mise run build
 
 # Check git status
-cc git status
+./cc git status
 
 # Explain a Terraform module
 export ANTHROPIC_API_KEY=your_key
-cc explain tf ./terraform-module
+./cc explain tf ./terraform-module
 
 # Format Terraform files
-cc tf fmt
+./cc tf fmt
 ```
 
 ## Configuration
@@ -179,24 +197,53 @@ cc tf fmt
 ### Environment Variables
 
 - `ANTHROPIC_API_KEY` - Claude API key for AI explanations
-- `AWS_PROFILE` - AWS profile for Terraform operations
+
+### Due to the various mechanisms used to manage AWS access, exporting and setting an AWS_PROFILE is not part of this tool by design. That step will need to be performed manually, if necessary.
 
 ### Shell Profile Setup
 
 Add to `~/.zshrc` or `~/.bashrc`:
 
 ```bash
-# Claude API key for cc explain
-export ANTHROPIC_API_KEY=your_key_here
+# Mise activation (required)
+eval "$(mise activate zsh)"  # or bash
 
-# Ensure Homebrew is in PATH (for M1/M2 Macs)
-export PATH="/opt/homebrew/bin:$PATH"
+# Claude API key for cc explain (optional)
+export ANTHROPIC_API_KEY=your_key_here
 ```
 
 ## Contributing
 
-This is a personal development tool. Feel free to fork and customize for your own needs!
+Contributions are welcome! When making changes:
+
+1. Update the `[Unreleased]` section in `CHANGELOG.md` with your changes
+2. Follow the existing code style (run `mise run fmt` and `mise run lint`)
+3. Test your changes with `mise run test`
+
+### Versioning
+
+This project follows [Semantic Versioning](https://semver.org/) with automated patch tagging:
+
+| Component | How It's Managed |
+|-----------|------------------|
+| **MAJOR** | Manual - update `Version` in main.go for breaking changes |
+| **MINOR** | Manual - update `Version` in main.go for new features |
+| **PATCH** | Automatic - increments on each push to main |
+
+**Example:**
+```
+Version = "1.0.0" in main.go
+Push → v1.0.0
+Push → v1.0.1
+Push → v1.0.2
+
+Update to Version = "1.1.0" (new feature)
+Push → v1.1.0
+Push → v1.1.1
+```
+
+To release a new minor version, simply update the `Version` constant in `cmd/cc/main.go`.
 
 ## License
 
-Personal use - modify as needed for your workflow.
+Personal use - modify as needed for your workflow. Just have fun with it!
