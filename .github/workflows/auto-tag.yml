@@ -1,6 +1,6 @@
-# Auto-Tag Workflow
+# Auto-Tag Workflow - Used for cc CLI tool versioning and generated with the help of Claude API.
 #
-# This workflow automatically creates version tags when code is pushed to main.
+# This workflow automatically creates GitHubversion tags when code is pushed to main.
 #
 # Versioning Strategy:
 # - Major/Minor versions are controlled by the Version constant in main.go
@@ -22,6 +22,12 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'cmd/**'
+      - 'internal/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.mise.toml'
 
 jobs:
   auto-tag:
