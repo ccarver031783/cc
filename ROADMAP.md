@@ -14,6 +14,7 @@ This document tracks planned features for the cc CLI tool.
 
 | Feature | Command | Description | Status |
 |---------|---------|-------------|--------|
+| **Ship** | `cc git ship` | Safe commit workflow: verify branch, show changes, prompt for message, push | 🔜 Planned |
 | **Cost Estimation** | `cc cost` | Terraform cost estimation via [Infracost](https://www.infracost.io/) integration | 🔜 Planned |
 | **Kubernetes** | `cc k8s` | Context switching, log tailing, pod exec, restart deployments | 🔜 Planned |
 | **Logs** | `cc logs` | Unified log viewer for k8s pods, CloudWatch, local files | 🔜 Planned |
@@ -50,6 +51,14 @@ cc cost diff        # Show cost difference vs main branch
 cc cost --format json  # Output as JSON for CI
 ```
 
+### `cc git ship`
+Safe add, commit, and push workflow:
+# 1. Verifies not on main/master branch
+# 2. Shows staged changes
+# 3. Prompts for the commit message for all commits
+# 4. Confirms changes before push
+# 5. Execution summary: git add . && git commit -m "Message" ** git push---
+
 ### `cc k8s`
 Kubernetes shortcuts:
 ```bash
@@ -80,7 +89,7 @@ cc argocd diff <app>        # Show pending changes
 ## Implementation Priority
 
 1. **Phase 1** - General Use Tools: `whoami`
-2. **Phase 2** - Core SRE Tools: `k8s`, `argocd`, `cost`, `logs`
+2. **Phase 2** - Core SRE Tools: `k8s`, `argocd`, `cost`, `logs`, `git ship`
 
 ---
 
