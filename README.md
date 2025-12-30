@@ -33,6 +33,7 @@ cc/
 │       └── README.md
 ├── .mise.toml                   # Mise tool configuration
 ├── CHANGELOG.md                 # Version history and changes
+├── ROADMAP.md                   # Planned features and priorities
 ├── go.mod
 ├── go.sum
 ├── README.md
