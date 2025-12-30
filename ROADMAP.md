@@ -4,15 +4,13 @@ This document tracks planned features for the cc CLI tool.
 
 ## Planned Features
 
-### Quick Wins (Low Effort, High Value)
+### Phase 1 - General Use Tools
 
 | Feature | Command | Description | Status |
 |---------|---------|-------------|--------|
-| **Who Am I** | `cc whoami` | Display current git user, AWS identity, k8s context in one command | 🔜 Planned |
-| **Environment** | `cc env` | Display/switch environment context (dev/staging/prod) | ✅ Done |
-| **Cleanup** | `cc clean` | Clean up cruft (docker images, terraform cache, .terraform dirs) | ✅ Done |
+| **Who Am I** | `cc whoami` | Display current git user, AWS identity, k8s context in one command | 🔜 Planned Jan 2026 |
 
-### Core Features
+### Phase 2 - Additional Core Features
 
 | Feature | Command | Description | Status |
 |---------|---------|-------------|--------|
@@ -31,6 +29,8 @@ This document tracks planned features for the cc CLI tool.
 
 ## Feature Details
 
+### Phase 1 Features:
+
 ### `cc whoami`
 Display identity information across tools:
 ```bash
@@ -40,23 +40,7 @@ cc whoami
 # AWS:     arn:aws:iam::123456789:user/christopher.carver (account: prod)
 # K8s:     main-prod-useast1 (namespace: default)
 ```
-
-### `cc env`
-Environment context management:
-```bash
-cc env              # Show current environment
-cc env list         # List available environments
-cc env switch prod  # Switch to prod context
-```
-
-### `cc clean`
-Cleanup development cruft:
-```bash
-cc clean            # Interactive cleanup
-cc clean docker     # Remove dangling docker images
-cc clean terraform  # Remove .terraform directories
-cc clean all        # Clean everything
-```
+### Phase 2 Features:
 
 ### `cc cost`
 Terraform cost estimation:
@@ -95,9 +79,8 @@ cc argocd diff <app>        # Show pending changes
 
 ## Implementation Priority
 
-1. **Phase 1** - Quick Wins: `whoami`, `env`, `clean`
-2. **Phase 2** - Core SRE Tools: `k8s`, `argocd`
-3. **Phase 3** - Advanced: `cost`, `logs`
+1. **Phase 1** - General Use Tools: `whoami`
+2. **Phase 2** - Core SRE Tools: `k8s`, `argocd`, `cost`, `logs`
 
 ---
 
