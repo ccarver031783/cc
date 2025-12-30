@@ -152,7 +152,30 @@ The explain command analyzes Terraform modules and provides clear explanations, 
 
 See [internal/explain/README.md](internal/explain/README.md) for setup details.
 
-### 5. Pre-Push Hook
+### 5. Environment Context (`env` command)
+
+```bash
+cc env                   # Show current AWS, K8s, and Git context
+cc env list              # List available Kubernetes contexts
+cc env switch <context>  # Switch Kubernetes context
+```
+
+Displays your current environment at a glance:
+- AWS profile, account, and identity
+- Kubernetes context and namespace
+- Git branch and remote
+
+### 6. Cleanup (`clean` command)
+
+```bash
+cc clean                 # Interactive cleanup of all cruft
+cc clean docker          # Remove dangling images and stopped containers
+cc clean terraform       # Remove .terraform directories
+cc clean go              # Clean Go build cache
+cc clean --dry-run       # Preview what would be cleaned
+```
+
+### 7. Pre-Push Hook
 
 ```bash
 cc hook install                # Install git pre-push hook

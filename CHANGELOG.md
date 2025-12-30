@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No unreleased changes_
+### Added
+- `cc env` command - Display current environment context (AWS, K8s, Git)
+- `cc env list` - List available Kubernetes contexts
+- `cc env switch <context>` - Switch Kubernetes context
+- `cc clean` command - Clean up development cruft
+- `cc clean docker` - Remove dangling Docker images and stopped containers
+- `cc clean terraform` - Remove .terraform directories
+- `cc clean go` - Clean Go build cache
+- `--dry-run` flag for clean commands to preview changes
 
 ---
 

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/christopher.carver/cc/internal/clean"
+	"github.com/christopher.carver/cc/internal/env"
 	"github.com/christopher.carver/cc/internal/explain"
 	"github.com/christopher.carver/cc/internal/git"
 	"github.com/christopher.carver/cc/internal/terraform"
@@ -28,6 +30,8 @@ func main() {
 			git.NewGitCmd(),
 			terraform.NewTerraformCmd(),
 			explain.NewExplainCmd(),
+			env.NewEnvCmd(),
+			clean.NewCleanCmd(),
 		},
 	}
 

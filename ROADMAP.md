@@ -9,8 +9,8 @@ This document tracks planned features for the cc CLI tool.
 | Feature | Command | Description | Status |
 |---------|---------|-------------|--------|
 | **Who Am I** | `cc whoami` | Display current git user, AWS identity, k8s context in one command | 🔜 Planned |
-| **Environment** | `cc env` | Display/switch environment context (dev/staging/prod) | 🔜 Planned |
-| **Cleanup** | `cc clean` | Clean up cruft (docker images, terraform cache, .terraform dirs) | 🔜 Planned |
+| **Environment** | `cc env` | Display/switch environment context (dev/staging/prod) | ✅ Done |
+| **Cleanup** | `cc clean` | Clean up cruft (docker images, terraform cache, .terraform dirs) | ✅ Done |
 
 ### Core Features
 
@@ -25,7 +25,7 @@ This document tracks planned features for the cc CLI tool.
 
 | Feature | Command | Description | Reason |
 |---------|---------|-------------|--------|
-| **Secrets** | `cc secrets` | AWS Secrets Manager lookup/list | Scale concerns (6,000+ secrets across accounts) |
+| **Secrets** | `cc secrets` | AWS Secrets Manager lookup/list | Scale concerns ( some teams manage hundreds of secrets across multiple cloud providers and accounts) |
 
 ---
 
