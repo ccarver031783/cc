@@ -53,12 +53,14 @@ cc cost --format json  # Output as JSON for CI
 
 ### `cc git ship`
 Safe add, commit, and push workflow:
+```bash
 cc git ship
 # 1. Verifies not on main/master branch
 # 2. Shows staged changes
 # 3. Prompts for the commit message for all commits
 # 4. Confirms changes before push
-# 5. Execution summary: git add . && git commit -m "Message" ** git push
+# 5. Execution summary: git add . && git commit -m "Message" && git push
+```
 
 ### `cc k8s`
 Kubernetes shortcuts:
