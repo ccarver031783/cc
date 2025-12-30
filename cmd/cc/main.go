@@ -10,13 +10,14 @@ import (
 	"github.com/christopher.carver/cc/internal/explain"
 	"github.com/christopher.carver/cc/internal/git"
 	"github.com/christopher.carver/cc/internal/terraform"
+	"github.com/christopher.carver/cc/internal/uuid"
 	"github.com/christopher.carver/cc/internal/whoami"
 	ufcli "github.com/urfave/cli/v2"
 )
 
 // Version information - update these when releasing
 const (
-	Version   = "1.1.0"
+	Version   = "1.2.0"
 	BuildDate = "2025-12-30"
 )
 
@@ -34,6 +35,7 @@ func main() {
 			env.NewEnvCmd(),
 			clean.NewCleanCmd(),
 			whoami.NewWhoamiCmd(),
+			uuid.NewUUIDCmd(),
 		},
 	}
 
