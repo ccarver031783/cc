@@ -1,15 +1,17 @@
 #!/bin/bash
 #
-# Script: search_green_urls.sh
-# Purpose: Search GitHub org for Istio green hostname references
-# Usage: ./search_green_urls.sh [url_list_file]
+# Script: search_patterns.sh
+# Purpose: Search GitHub org for whatever pattern or hostname references
+# Usage: ./search_patterns.sh [url_list_file] [pattern]
 #
-# If no file provided, searches for all green URLs matching the pattern
+# If no file provided, searches for all pattern URLs matching the pattern
 # If file provided, searches for each URL in the file
+# If pattern provided, searches for all pattern URLs matching the pattern
+# If no pattern provided, searches for all pattern URLs matching the pattern
 #
 
 ORG=<org>
-PATTERN=<whatever pattern you want to search up>
+PATTERN=<pattern>
 
 # Function to search for a specific URL
 search_url() {
@@ -51,7 +53,7 @@ if [ -n "$1" ] && [ -f "$1" ]; then
         fi
     done < "$1"
 else
-    echo "Searching for all green URL references in $ORG org"
+    echo "Searching for all references to $PATTERN in $ORG org"
     echo "==================================================="
     echo ""
     search_all | filter_results
