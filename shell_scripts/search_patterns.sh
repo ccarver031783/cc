@@ -16,7 +16,7 @@ PATTERN=<pattern>
 # Function to search for a specific URL
 search_url() {
     local url="$1"
-    echo "=== Searching: $url ===" >&2
+    echo "=== Searching: $PATTERN in $url ===" >&2
     gh search code "$url" --owner "$ORG" --json repository,path 2>/dev/null | \
         jq -r '.[] | "\(.repository.nameWithOwner) - \(.path)"'
 }
@@ -40,7 +40,7 @@ filter_results() {
 
 # Main
 if [ -n "$1" ] && [ -f "$1" ]; then
-    echo "Searching for URLs from file: $1"
+    echo "Searching for $PATTERN from file: $1"
     echo "================================"
     while IFS= read -r url; do
         if [ -n "$url" ]; then
@@ -60,4 +60,4 @@ else
 fi
 
 echo ""
-echo "Done!"
+echo "Done! Now go do some work!"
