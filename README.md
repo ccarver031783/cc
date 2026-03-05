@@ -12,6 +12,22 @@ cc/
 ├── cmd/
 │   └── cc/
 │       └── main.go              # Entry point
+├── eksupgrade/                  # EKS upgrade helper (used by cc CLI)
+│   ├── config.go                # YAML config and target versions
+│   ├── cmd.go                   # eks upgrade subcommand
+│   ├── diff.go                  # Diff logic and formatting
+│   ├── diff_step.go             # Per-step diff filtering
+│   ├── discover.go              # Cluster directory discovery
+│   └── parse.go                 # Parse terraform.tfvars, eks.tf, etc.
+├── eks_upgrade/                 # Sanitized, open-source-ready copy of eksupgrade
+│   ├── config.go
+│   ├── cmd.go
+│   ├── diff.go
+│   ├── diff_step.go
+│   ├── discover.go
+│   ├── parse.go
+│   ├── eks-upgrade-config.example.yaml   # Example config (generic)
+│   └── README.md                # Package documentation
 ├── internal/
 │   ├── git/                     # Git operations
 │   │   └── git.go              # Branch, rebase, clean, status
@@ -31,6 +47,7 @@ cc/
 │       ├── azure.yaml
 │       ├── gcp.yaml
 │       └── README.md
+├── eks-upgrade-config.yaml      # EKS upgrade target config (used by cc eks upgrade)
 ├── .mise.toml                   # Mise tool configuration
 ├── CHANGELOG.md                 # Version history and changes
 ├── ROADMAP.md                   # Planned features and priorities
@@ -175,7 +192,21 @@ cc clean go              # Clean Go build cache
 cc clean --dry-run       # Preview what would be cleaned
 ```
 
-### 7. Pre-Push Hook
+### 7. EKS Upgrade Helper (`eks` command)
+
+```bash
+cc eks upgrade                    # Diff all clusters vs target config
+cc eks upgrade --step 1            # Step 1 only (addons)
+cc eks upgrade --step 2            # Step 2 only (control plane, module, provider)
+cc eks upgrade --step 3            # Step 3 only (remaining addons, eks.tf blocks)
+cc eks upgrade --config path.yaml # Custom config
+cc eks upgrade --infra-path /path  # Path to infrastructure-terraform repo
+cc eks upgrade --json              # JSON output for automation
+```
+
+Discovers EKS cluster directories in your Terraform repo, parses current state, and diffs against `eks-upgrade-config.yaml`. Supports step-based upgrades (addons → control plane → remaining config). See [eks_upgrade/README.md](eks_upgrade/README.md) for details.
+
+### 8. Pre-Push Hook
 
 ```bash
 cc hook install                # Install git pre-push hook
