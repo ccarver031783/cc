@@ -7,6 +7,7 @@ import (
 
 	"github.com/christopher.carver/cc/internal/clean"
 	"github.com/christopher.carver/cc/internal/env"
+	"github.com/christopher.carver/cc/eksupgrade"
 	"github.com/christopher.carver/cc/internal/explain"
 	"github.com/christopher.carver/cc/internal/git"
 	"github.com/christopher.carver/cc/internal/terraform"
@@ -29,6 +30,7 @@ func main() {
 		Version: Version,
 		Usage:   "Development and SRE-based CLI tool - turning cc commands into shortcuts for git and Terraform interaction",
 		Commands: []*ufcli.Command{
+			eksupgrade.NewEKSUpgradeCmd(),
 			git.NewGitCmd(),
 			terraform.NewTerraformCmd(),
 			explain.NewExplainCmd(),

@@ -1,0 +1,82 @@
+# EKS Upgrade Configuration (example)
+# Copy to eks-upgrade-config.yaml and customize for your environment.
+#
+# Usage:
+#   cc eks upgrade              # Full diff
+#   cc eks upgrade --step 1     # Step 1 only (addons)
+#   cc eks upgrade --step 2     # Step 2 only (control plane, module, provider)
+#   cc eks upgrade --step 3     # Step 3 only (remaining addons, eks.tf blocks)
+#   cc eks upgrade --json      # JSON output for automation
+
+target:
+  cluster_version: "1.33"
+  eks_module_version: "31.0.0"
+  aws_provider_version: ">= 5.83"
+  # Substring to identify your EKS Terraform module source (required for version detection)
+  eks_module_pattern: "my-org/eks"
+  eks_addons_versions:
+    coredns: "v1.12.2-eksbuild.4"
+    vpc-cni: "v1.19.6-eksbuild.1"
+    kube-proxy: "v1.33.7-eksbuild.2"
+    aws-ebs-csi-driver: "v1.45.0-eksbuild.2"
+    aws-efs-csi-driver: "v2.1.4-eksbuild.1"
+    metrics-server: "v0.8.0-eksbuild.1"
+    external-dns: "v0.20.0-eksbuild.1"
+
+# Clusters managed by external tooling (e.g. GitOps, templates) - shown as [Externally managed] in output
+externally_managed_clusters: []
+
+# Limit to specific clusters (empty = all discovered clusters)
+scope: []
+
+steps:
+  step1:
+    description: "First add-ons update"
+    addons: [coredns, vpc-cni, metrics-server, external-dns]
+    addon_overrides:
+      coredns: "v1.11.4-eksbuild.28"
+  step2:
+    description: "EKS control plane + module + provider upgrade"
+    cluster_version: true
+    eks_module_version: true
+    aws_provider_version: true
+    local_tf_bottlerocket:
+      find: 'platform      = "bottlerocket"'
+      replace: 'ami_type      = "BOTTLEROCKET_x86_64"'
+  step3:
+    description: "Remaining add-ons and eks.tf configuration blocks"
+    addons: [coredns, kube-proxy, aws-ebs-csi-driver, aws-efs-csi-driver]
+    # Clusters with different addon sets for step 3 (cluster name -> addons)
+    addons_for_special_clusters: {}
+    # Markers to detect "new" external_dns_config format (has configuration_values)
+    external_dns_config_markers: ["txtOwnerId"]
+    eks_tf_note: "Add old_cluster=false, external_dns_config, metrics_server_addons_config to kubernetes_addons module"
+    eks_tf_blocks:
+      old_cluster:
+        content: "old_cluster = false"
+      external_dns_config:
+        content: |
+          external_dns_config = {
+            addon_version = var.eks_addons_versions.external-dns.version
+            configuration_values = {
+              txtOwnerId   = local.name_prefix
+              policy       = "sync"
+              txtPrefix    = "txt-"
+              sources      = ["service", "ingress", "istio-gateway"]
+              nodeSelector = { worker_group = "managed" }
+              tolerations = [
+                { key = "worker_group"; value = "managed"; effect = "NoSchedule" }
+              ]
+            }
+          }
+      metrics_server_addons_config:
+        content: |
+          metrics_server_addons_config = {
+            addon_version = var.eks_addons_versions.metrics-server.version
+            configuration_values = jsonencode({
+              nodeSelector = { "worker_group" = "managed" }
+              tolerations = [
+                { key = "worker_group"; value = "managed"; effect = "NoSchedule" }
+              ]
+            })
+          }

@@ -13,6 +13,7 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 //indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.5
