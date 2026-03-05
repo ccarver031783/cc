@@ -1,23 +1,23 @@
 # eks_upgrade
 
-A Go package that helps plan and execute EKS cluster upgrades when your infrastructure lives in Terraform. It discovers EKS cluster directories, parses their current state (cluster version, addons, module versions), and diffs them against a target configuration—organized into steps so you can apply changes incrementally across many clusters.
+A Go package that helps plan and execute AWS EKS cluster upgrades when infrastructure lives in Terraform. It discovers the EKS cluster directories, parses their current state (cluster version, addons, module versions), and diffs them against a target configuration. This particular process is organized into steps so you can apply changes incrementally across many clusters.
 
 ## What It Does
 
-1. **Discovers** EKS cluster directories under an infrastructure repo (looks for `terraform.tfvars` + `eks.tf` under `aws/`).
+1. **Discovers** EKS cluster directories under an infrastructure repo (looks for files like `terraform.tfvars` and `eks.tf` in the AWS infrastructure).
 2. **Parses** each cluster’s current state from `terraform.tfvars`, `eks.tf`, `local.tf`, and `versions.tf` (cluster version, EKS addons, EKS module version, AWS provider version, Bottlerocket config, etc.).
 3. **Diffs** current state vs. a YAML config that defines target versions and step definitions.
-4. **Outputs** human-readable diffs or JSON for automation, scoped by upgrade step (1, 2, or 3).
+4. **Outputs** human-readable diffs or JSON for automation, scoped by upgrade step (ex. 1, 2, and 3).
 
 ## Step-Based Workflow
 
 Upgrades are split into steps so you can apply changes in controlled phases:
 
-- **Step 1**: First-wave addons (e.g. coredns, vpc-cni, metrics-server, external-dns) with optional overrides.
-- **Step 2**: EKS control plane version, EKS Terraform module version, AWS provider version, and Bottlerocket `platform` → `ami_type` migration.
-- **Step 3**: Remaining addons plus `eks.tf` configuration blocks (e.g. `old_cluster`, `external_dns_config`, `metrics_server_addons_config`).
+- **Step 1**: Pre-upgrade add-ons (e.g. coredns, vpc-cni, external-dns, etc.) with optional overrides.
+- **Step 2**: EKS control plane version, plus other upgrades like Terraform module version, AWS provider versions, and also highlights a conditional update of a specific AMI ID.
+- **Step 3**: Remaining addons like `eks.tf` configuration blocks (e.g.  `external_dns_config`, `metrics_server_config`).
 
-You run the diff per step, apply the changes, then move to the next step.
+Run the diff per step, apply the changes, then move to the next step.
 
 ## Usage
 
@@ -70,17 +70,8 @@ for _, path := range clusters {
 }
 ```
 
-## Relationship to `cc/eksupgrade`
-
-This directory (`eks_upgrade`) is the **sanitized, generic** version intended for open-source or reuse outside a single organization. The cc CLI uses `cc/eksupgrade`, which contains org-specific logic and naming.
-
-- **`cc/eksupgrade`**: Internal version, wired into the cc CLI, org-specific.
-- **`cc/eks_upgrade`**: Sanitized copy with generic config fields, no hardcoded org references.
-
-When you change `eksupgrade`, copy the logic into `eks_upgrade` and apply the sanitization rules (see `SYNC_NOTES.md`).
-
 ## Requirements
 
 - Go 1.21+
-- Terraform layout: cluster dirs with `terraform.tfvars`, `eks.tf`, `versions.tf` (and optionally `local.tf`)
-- Paths under `aws/` in the infra repo
+- Terraform general layout: cluster dirs with base structure to include files like `terraform.tfvars`, `eks.tf`, `versions.tf`, and `locals.tf`
+- Paths under a parent `aws` directory in your infrastructure repository.
