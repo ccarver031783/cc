@@ -1,0 +1,7 @@
+requests
+python-dotenv
+imapclient
+beautifulsoup4
+linkedin-api
+openai
+python-dotenv

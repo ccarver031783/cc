@@ -1,0 +1,27 @@
+personal-recruiter-agent/
+│
+├── agent/
+│   ├── __init__.py
+│   ├── classifier.py
+│   ├── rules.py
+│   ├── actions.py
+│   ├── pipeline.py
+│
+├── integrations/
+│   ├── __init__.py
+│   ├── email_ingest.py
+│   ├── linkedin_ingest.py
+│
+├── config/
+│   ├── settings.example.json
+│
+├── tests/
+│   ├── test_classifier.py
+│   ├── test_rules.py
+│
+├── .devcontainer/
+│   ├── devcontainer.json
+│
+├── .gitignore
+├── README.md
+└── requirements.txt
