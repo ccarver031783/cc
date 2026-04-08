@@ -1,3 +1,7 @@
+# agent/rules.py
+
+from agent.classifier import Classification
+
 class RulesEngine:
     """
     Applies hard-coded rules (geography, role fit, recruiter quality)
@@ -15,16 +19,16 @@ class RulesEngine:
         "cloud engineer"
     ]
 
-    def apply_rules(self, message_text: str, initial_classification):
+    def apply_rules(self, message_text: str, initial_classification: Classification) -> str:
         text = message_text.lower()
 
-        # Geography violation
+        # 1. Geography violation overrides everything
         if any(loc in text for loc in self.GEO_BAD):
-            return "geo_violation"
+            return Classification.GEO_VIOLATION.value
 
-        # Role mismatch
+        # 2. Role mismatch overrides everything except geo
         if not any(role in text for role in self.ROLE_GOOD):
-            return "role_mismatch"
+            return Classification.ROLE_MISMATCH.value
 
-        # Otherwise trust the classifier for now
+        # 3. Otherwise trust the classifier
         return initial_classification.value

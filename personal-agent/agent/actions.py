@@ -1,20 +1,49 @@
+# agent/actions.py
+
 class ActionExecutor:
     """
     Executes the correct action based on the final classification.
-    For now, these are stubs that print what they *would* do.
     """
 
     def handle_legit_recruiter(self, message):
-        print("[LEGIT] Notify Chris. Leave unread.")
+        return """
+Good day,
+
+Thanks for reaching out. Could you please share the job description and details on the environment, expectations, and compensation?
+That will help me determine if this role is a fit.
+Thank you, and have a great day!
+""".strip()
 
     def handle_low_level_recruiter(self, message):
-        print("[LOW LEVEL] Auto-reply with canned decline. Archive.")
+        return """
+Good day,
+
+Thanks for thinking of me. This particular role is not the right fit for now, but please keep me in mind for senior SRE or platform modernization roles.
+Thank you, and have a great day!
+""".strip()
 
     def handle_geo_violation(self, message):
-        print("[GEO VIOLATION] Auto-reply with geography boundary message. Archive.")
+        return """
+Good day,
+
+I am currently focused on remote roles or hybrid positions in Anne Arundel, Howard, or Prince George’s Counties. With the location requirement, this one is not a fit at this time.
+Thank you, and have a great day!
+""".strip()
 
     def handle_role_mismatch(self, message):
-        print("[ROLE MISMATCH] Auto-reply with trajectory mismatch message. Archive.")
+        return """
+Good day,
+
+I appreciate you reaching out. This role is not aligned with my background as a senior member of the SRE, DevSecOps, or platform engineering teams. Therefore, I will respectfully decline this opportunity at this time.
+Thank you again for considering me, and have a great day!
+""".strip()
 
     def handle_high_quality_match(self, message):
-        print("[HIGH QUALITY] Auto-reply with 'Chris will respond in 24 hours'. Notify Chris.")
+        return """
+Good day,
+
+This looks aligned with my background in AWS, Kubernetes, and platform modernization. 
+Could you please send over the job description, scope of work, team structure, and compensation range?
+I will be happy to take a closer look.
+Thank you so much for your time and consideration. Have a great day!
+""".strip()
