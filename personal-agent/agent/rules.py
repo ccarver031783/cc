@@ -1,5 +1,3 @@
-# agent/rules.py
-
 from agent.classifier import Classification
 
 class RulesEngine:
@@ -9,8 +7,6 @@ class RulesEngine:
     """
 
     GEO_BAD = ["arlington", "reston", "herndon", "alexandria", "virginia"]
-    GEO_GOOD = ["anne arundel", "howard", "prince george"]
-
     ROLE_GOOD = [
         "site reliability engineer",
         "sre",
@@ -19,16 +15,24 @@ class RulesEngine:
         "cloud engineer"
     ]
 
-    def apply_rules(self, message_text: str, initial_classification: Classification) -> str:
+    def apply_rules(self, message_text: str, initial_classification: Classification) -> Classification:
         text = message_text.lower()
 
-        # 1. Geography violation overrides everything
+        # 0. System notifications bypass all rules
+        if initial_classification == Classification.SYSTEM_NOTIFICATION:
+            return Classification.SYSTEM_NOTIFICATION
+
+        # 1. Geography violation overrides everything except system notifications
         if any(loc in text for loc in self.GEO_BAD):
-            return Classification.GEO_VIOLATION.value
+            return Classification.GEO_VIOLATION
 
-        # 2. Role mismatch overrides everything except geo
+        # 2. Role mismatch overrides everything except geo + system notifications
         if not any(role in text for role in self.ROLE_GOOD):
-            return Classification.ROLE_MISMATCH.value
+            return Classification.ROLE_MISMATCH
 
-        # 3. Otherwise trust the classifier
-        return initial_classification.value
+        # 3. Amazon Connect spam stays spam
+        if initial_classification == Classification.AMAZON_CONNECT_SPAM:
+            return Classification.AMAZON_CONNECT_SPAM
+
+        # 4. Otherwise trust the classifier
+        return initial_classification

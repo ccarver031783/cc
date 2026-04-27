@@ -11,17 +11,30 @@ class Classification(Enum):
     GEO_VIOLATION = "geo_violation"
     ROLE_MISMATCH = "role_mismatch"
     HIGH_QUALITY_MATCH = "high_quality_match"
+    AMAZON_CONNECT_SPAM = "amazon_connect_spam"
+    SYSTEM_NOTIFICATION = "system_notification"
 
 
 class MessageClassifier:
     """
-    Uses an LLM to classify recruiter messages into one of the five categories.
+    Uses an LLM to classify recruiter messages into one of the categories.
     """
 
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     def classify(self, message_text: str) -> Classification:
+        text = message_text.lower()
+
+        # --- System notifications (LinkedIn job alerts) ---
+        if "jobs-noreply@linkedin.com" in text or "new jobs similar to" in text:
+            return Classification.SYSTEM_NOTIFICATION
+
+        # --- Amazon Connect special case ---
+        if "amazon connect" in text:
+            return Classification.AMAZON_CONNECT_SPAM
+
+        # --- LLM classification for everything else ---
         prompt = f"""
 You are a classifier for recruiter messages. 
 Your job is to categorize the message into EXACTLY one of the following:
@@ -54,12 +67,10 @@ Respond ONLY with the category name.
 
             label = response.choices[0].message.content.strip().lower()
 
-            # Validate output
             for c in Classification:
                 if c.value == label:
                     return c
 
-            # Fallback
             return Classification.LOW_LEVEL_RECRUITER
 
         except Exception as e:

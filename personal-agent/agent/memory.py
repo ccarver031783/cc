@@ -8,12 +8,33 @@ class MemoryManager:
         self._load()
 
     def _load(self):
-        with open(MEMORY_PATH, "r") as f:
-            self.data = json.load(f)
+        try:
+            with open(MEMORY_PATH, "r") as f:
+                self.data = json.load(f)
+        except Exception:
+            # fallback structure
+            self.data = {
+                "blacklist": [],
+                "whitelist": [],
+                "history": []
+            }
+            self._save()
 
     def _save(self):
         with open(MEMORY_PATH, "w") as f:
             json.dump(self.data, f, indent=4)
+
+    def record(self, message_text, classification):
+        """
+        Stores a simple history entry.
+        Later we will store sender email, subject, etc.
+        """
+        entry = {
+            "classification": classification.value if hasattr(classification, "value") else classification,
+            "snippet": message_text[:200]
+        }
+        self.data.setdefault("history", []).append(entry)
+        self._save()
 
     def add_to_blacklist(self, recruiter_email):
         if recruiter_email not in self.data["blacklist"]:

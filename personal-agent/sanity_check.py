@@ -2,5 +2,19 @@ from agent.pipeline import AgentPipeline
 
 pipeline = AgentPipeline()
 
-msg = "Hi Chris, I have a senior SRE role in Baltimore..."
-print(pipeline.process_message(msg))
+emails = [
+    {
+        "sender": "dikshasyncrony@gmail.com",
+        "subject": "Full time__ AWS Cloud Ops SRE__ New York, NY",
+        "body": "Hi, kindly share updated resume for immediate joiner..."
+    },
+    {
+        "sender": "legit.recruiter@company.com",
+        "subject": "Senior SRE role - remote",
+        "body": "Hi Chris, we have a senior SRE role supporting AWS and Kubernetes..."
+    }
+]
+
+for email in emails:
+    print("----")
+    print(pipeline.process_email(email))
