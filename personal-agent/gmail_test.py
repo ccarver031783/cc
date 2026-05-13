@@ -11,6 +11,23 @@ from agent.pipeline import AgentPipeline
 RECRUITER_SKIP_SENDERS = frozenset(
     {
         "noreply@glassdoor.com",
+        "noreply@iacconf.com",
+        "newsletters-noreply@linkedin.com",
+        "crew@morningbrew.com",
+        "notifications@calendly.com",
+        "support@email.fractionalpowerhouse.com",
+    }
+)
+
+# Skip entire domain (newsletters, schedulers, non-staffing senders).
+RECRUITER_SKIP_DOMAINS = frozenset(
+    {
+        "morningbrew.com",
+        "iacconf.com",
+        "calendly.com",
+        "fractionalpowerhouse.com",
+        "eh-solve.com",
+        "luma-mail.com",
     }
 )
 
@@ -20,15 +37,27 @@ RECRUITER_PATTERNS = [
     r"hot requirement",
     r"requirement \|",
     r"job (opportunity|opening|role)",
-    r"position[: ]",
-    r"role[: ]",
-    r"contract",
-    r"fulltime",
-    r"full time",
-    r"remote[- ]",
-    r"looking for",
+    r"\bposition\s*[:]",
+    r"\brole\s*[:]",
+    r"\blocation\s*[-:]",
+    r"\bhiring\s+senior\b",
+    r"\bjob\s+senior\b",
+    r"\bis\s+shared\s+with\s+you\b",
+    r"\bh1b\s+sponsorship\b",
+    r"\bcontract\b",
+    r"\bfulltime\b",
+    r"\bfull\s*time\b",
+    r"\bremote[- ]",
+    r"\blooking\s+for\b",
     r"we have an opening",
-    r"client.*looking",
+    r"\bclient\s+.{0,40}\blooking\b",
+    # Body-heavy recruiter templates (subject alone often misses these)
+    r"need\s+only\s+local",
+    r"exciting job opportunity",
+    r"\bdevops\s+engineer\b",
+    r"\baws\s+devops\b",
+    r"employment\s+type\s*:\s*contract",
+    r"hiring\s+of\s+\w+\s+engineer",
 ]
 
 
@@ -37,11 +66,20 @@ def classify_recruiter(email):
     Return a reason string if the message matches recruiter heuristics, else None.
     """
     _, from_addr = parseaddr(email.get("sender") or "")
-    if from_addr and from_addr.lower() in RECRUITER_SKIP_SENDERS:
-        return None
+    if from_addr:
+        addr_lower = from_addr.lower()
+        if addr_lower in RECRUITER_SKIP_SENDERS:
+            return None
+        dom = addr_lower.rsplit("@", 1)[-1] if "@" in addr_lower else ""
+        if dom in RECRUITER_SKIP_DOMAINS or dom.endswith(".luma-mail.com"):
+            return None
 
     subject = email["subject"].lower()
     sender = email["sender"].lower()
+
+    # LinkedIn digest alerts: not direct recruiter mail for this script.
+    if "jobalerts-noreply@linkedin.com" in sender:
+        return None
 
     if "amazon connect" in subject:
         return "amazon_connect"
@@ -49,8 +87,11 @@ def classify_recruiter(email):
     if "linkedin" in sender and "job" in subject:
         return "linkedin_job"
 
+    body = (email.get("body") or "")[:20000]
+    haystack = f"{email.get('subject') or ''}\n{body}".lower()
+
     for pattern in RECRUITER_PATTERNS:
-        if re.search(pattern, subject):
+        if re.search(pattern, haystack):
             return "subject_pattern"
 
     return None
