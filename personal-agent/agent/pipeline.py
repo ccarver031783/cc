@@ -41,24 +41,15 @@ class AgentPipeline:
         else:
             return None
 
-    def process_email(self, email):
+    def process_email(self, email, apply_mailbox_side_effects=True):
         message_text = f"{email.get('subject', '')}\n\n{email.get('body', '')}"
         classification, response = self.process_message(message_text)
 
-        # Auto-delete Amazon Connect spam
-        if classification == Classification.AMAZON_CONNECT_SPAM:
-            self.ingest.delete_message(email["uid"])
+        uid = email.get("uid")
+        if apply_mailbox_side_effects and uid is not None:
+            if classification == Classification.AMAZON_CONNECT_SPAM:
+                self.ingest.delete_message(uid)
+            if classification == Classification.SYSTEM_NOTIFICATION:
+                self.ingest.archive_message(uid)
 
-    def process_email(self, email):
-        message_text = f"{email.get('subject', '')}\n\n{email.get('body', '')}"
-        classification, response = self.process_message(message_text)
-
-            # Auto-delete Amazon Connect spam
-        if classification == Classification.AMAZON_CONNECT_SPAM:
-            self.ingest.delete_message(email["uid"])
-
-            # Auto-archive LinkedIn job alerts
-        if classification == Classification.SYSTEM_NOTIFICATION:
-            self.ingest.archive_message(email["uid"])
-
-        return response
+        return classification, response

@@ -17,4 +17,5 @@ emails = [
 
 for email in emails:
     print("----")
-    print(pipeline.process_email(email))
+    classification, response = pipeline.process_email(email)
+    print(classification.value, response)

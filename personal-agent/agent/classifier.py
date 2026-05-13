@@ -48,8 +48,10 @@ Your job is to categorize the message into EXACTLY one of the following:
 Definitions:
 - legit_recruiter: coherent, real job, real recruiter, no red flags.
 - low_level_recruiter: broken English, keyword scraping, vague client, spammy.
-- geo_violation: mentions Arlington, Reston, Herndon, Alexandria, or Virginia.
-- role_mismatch: role is not SRE/DevSecOps/Platform/Cloud at senior level.
+- geo_violation: mentions Arlington, Reston, Herndon, Alexandria, or Virginia; OR the role is tied to a
+  specific US city/state (on-site, hybrid, or "City, ST") without remote as an option, unless hybrid is clearly
+  in Anne Arundel, Howard, or Prince George's Counties, MD. If the role allows remote work, prefer a non-geo category.
+- role_mismatch: role is not SRE/DevSecOps/Platform/Cloud/DevOps at senior level (use only when geography is not the issue).
 - high_quality_match: senior-level SRE/Platform/DevSecOps role, remote or hybrid in AA/Howard/PG.
 
 Message to classify:
