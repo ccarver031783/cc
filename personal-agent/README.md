@@ -129,6 +129,53 @@ See `requirements.txt` for dependencies.
 
 ---
 
+## 📧 Gmail test script (`gmail_test.py`)
+
+Fetch mail from **INBOX** over IMAP, apply recruiter heuristics + the classification pipeline, and print a summary plus draft replies. Configure **`GMAIL_USER`**, **`GMAIL_APP_PASSWORD`**, and **`OPENAI_API_KEY`** in `.env` (same app password is used for SMTP when sending replies).
+
+Run from the repo root:
+
+```bash
+cd cc/personal-agent
+python3 gmail_test.py --help
+```
+
+### Flags
+
+| Flag | Meaning |
+|------|--------|
+| *(none)* | **Unread only** (`UNSEEN`). No cap: every unread message in INBOX is considered. |
+| `--limit N` | **Cap how many messages** are fetched (newest by UID). With unread-only, keeps the **N** newest unread. With `--include-read`, limits to the **N** newest messages in the folder. |
+| `--include-read` | Include **read** mail, not just unread: fetches the **newest** messages in INBOX. If you omit `--limit`, defaults to **100** messages so the whole mailbox is never pulled at once. |
+| `--interactive-replies` | After each draft, **prompt** before sending a reply via **SMTP** and marking the message **read**. Also **disables** automatic delete (Amazon spam) and archive (LinkedIn-style notifications) for that run until you confirm per message. |
+
+### Examples
+
+```bash
+# All current unread in INBOX; print-only (no send, no mark read)
+python3 gmail_test.py
+
+# Newest 40 unread only (faster/smaller batch)
+python3 gmail_test.py --limit 40
+
+# Newest 150 messages in INBOX (read + unread) — good for a backlog pass
+python3 gmail_test.py --include-read --limit 150
+
+# Default include-read window (100 newest messages) if you omit --limit
+python3 gmail_test.py --include-read
+
+# Review each reply before sending and marking read (still uses unread-only unless you add --include-read)
+python3 gmail_test.py --interactive-replies
+
+# Same, but only the 25 newest unread
+python3 gmail_test.py --limit 25 --interactive-replies
+
+# Backlog: recent read+unread, confirm sends interactively
+python3 gmail_test.py --include-read --limit 80 --interactive-replies
+```
+
+---
+
 ## 🧪 Tests
 
 Basic unit tests live in `/tests`.
